@@ -3,7 +3,8 @@ import firebase from "firebase/app";
 import "firebase/auth";
 import firebaseConfig from '../firebase.Config';
 import { Form } from 'react-bootstrap';
-import { Button } from 'bootstrap';
+import { UserContext } from '../../App';
+import { useHistory, useLocation } from 'react-router';
 
 if (!firebase.apps.length) {
 firebase.initializeApp(firebaseConfig);
@@ -11,6 +12,10 @@ firebase.initializeApp(firebaseConfig);
   firebase.app(); // if already initialized, use that one
 }
 const Login = () => {
+  const [loggedInUser, setLoggedInUser]= useState(UserContext)
+  const history = useHistory();
+  const location = useLocation()
+  const { from } = location.state || { from: { pathname: "/" } };
   const [user, setUser] = useState({})
     var provider = new firebase.auth.GoogleAuthProvider();
     var fbProvider = new firebase.auth.FacebookAuthProvider();
@@ -37,11 +42,11 @@ const Login = () => {
       .auth()
       .signInWithPopup(fbProvider)
       .then((result) => {
-        var credential = result.credential;
-        var user = result.user;
-        var accessToken = credential.accessToken;
-        console.log(user)
-        setUser(user)
+        const {displayName, email} = result.user;
+        const signInUser = {name: displayName, email}
+        setUser(signInUser)
+        setLoggedInUser(signInUser)
+        history.replace(from)
       })
       .catch((error) => {
         var errorCode = error.code;
@@ -75,8 +80,8 @@ const Login = () => {
       </Form>
       <div className="text-primary">
         <h3>Name: {user.displayName}</h3>
-      <h3>Email: {user.email}</h3>
-      <img src={user.photoURL} alt="" />
+         <h3>Email: {user.email}</h3>
+         <img src={user.photoURL} alt="" />
       </div>
     </div>
   );
